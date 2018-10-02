@@ -4,6 +4,7 @@
 import sys
 import os
 import logging
+from datetime import datetime as dt
 
 from astropy.io import fits
 from astropy.wcs import WCS
@@ -134,7 +135,9 @@ hdul = fits.open(os.path.join(data_path, 'HH305E.fits'))
 wcs = WCS(hdul[0].header)
 zpix = np.arange(0,hdul[0].data.shape[0])
 wavs = [wcs.all_pix2world(np.array([[0,0,z]]), 1)[0][2]*1e10 for z in zpix]
-cube = hdul[0].data[:, 15:80, 5:29]
+xtrim = [5, 29]
+ytrim = [15, 80]
+cube = hdul[0].data[:, ytrim[0]:ytrim[1], xtrim[0]:xtrim[1]]
 
 ##-------------------------------------------------------------------------
 # Select Nebular Background
@@ -157,6 +160,15 @@ neb_subtracted = cube.copy()
 for z in zpix:
 #     neb_subtracted[z,:,:] = neb_subtracted[z,:,:] - model(wavs[z])
     neb_subtracted[z,:,:] = neb_subtracted[z,:,:] - spect[z]
+
+if not os.path.exists(os.path.join(data_path, 'HH305E_nebsub.fits')):
+    hdr = hdul[0].header
+    xbkg = [xtrim[0]+xrange[0], xtrim[0]+xrange[1]]
+    ybkg = [ytrim[0]+yrange[0], ytrim[0]+yrange[1]]
+    now = dt.utcnow().strftime('%Y/%m/%d %H:%M:%S UT')
+    hdr.set('HISTORY', f'Background subtracted x:{xbkg} y:{ybkg} [{now}]')
+    hdu = fits.PrimaryHDU(data=neb_subtracted, header=hdr)
+    hdu.writeto(os.path.join(data_path, 'HH305E_nebsub.fits'))
 
 ##-------------------------------------------------------------------------
 ## Shocks in HH305E
