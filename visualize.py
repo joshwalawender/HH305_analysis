@@ -378,11 +378,11 @@ plt.figure(figsize=(40,40))
 
 pixel_count = 0
 log.info('  Iterating through all pixels in image')
-for ypix in range(map_shape[0]):
-    log.info(f'  Row {ypix+1} of {map_shape[0]}')
+for ypix in range(map_shape[0]-1,-1,-1):
+    log.info(f'  Row {map_shape[0]-ypix} of {map_shape[0]}')
     for xpix in range(map_shape[1]):
         pixel_count += 1
-        
+
         spect = neb_subtracted[:, 2*ypix:2*ypix+2, 2*xpix:2*xpix+2]
         spect = np.mean(np.mean(spect, axis=1), axis=1)
         i_peak = np.where(spect == spect.max())[0]
@@ -416,7 +416,6 @@ for ypix in range(map_shape[0]):
         velocity_map2[ypix, xpix] = H_beta_velocity2.value
         turbulence_map2[ypix, xpix] = H_beta_sigma2.value
 
-#         print(xpix, ypix)
 #         print(min(spect[whbeta]), np.mean(spect[whbeta]))
 #         print(H_beta_wav2, model.mean_1.value)
 #         print(H_beta_sigma_wav2, H_beta_sigma2.value)
@@ -434,6 +433,7 @@ for ypix in range(map_shape[0]):
               for l in w]
         plt.plot(vs, model(w), 'r-', alpha=0.4, label='Fit')
         plt.plot([H_beta_velocity2.value]*2, [-100, 250], 'g-', alpha=0.5)
+        plt.text(0, -50, f"{xpix}, {ypix} ({H_beta_flux:.0f})")
         plt.yticks([0,100,200])
 #         plt.ylim(-100,300)
         plt.ylim(-10,30)
